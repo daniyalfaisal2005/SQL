@@ -416,3 +416,52 @@ Key Points
 - Use aliases for readability.
 - Oracle also supports old-style joins using (+), but ANSI JOIN syntax is recommended.
 
+
+
+CREATE TYPE Employee_t AS OBJECT (
+  emp_id   NUMBER,
+  name     VARCHAR2(30),
+  salary   NUMBER,
+
+  MEMBER FUNCTION annual RETURN NUMBER,
+  MEMBER PROCEDURE raise(p NUMBER)
+);
+/
+
+CREATE TYPE BODY Employee_t AS
+
+  MEMBER FUNCTION annual RETURN NUMBER IS
+  BEGIN
+    RETURN salary * 12;
+  END;
+
+  MEMBER PROCEDURE raise(p NUMBER) IS
+  BEGIN
+    salary := salary + p;
+  END;
+
+END;
+/
+
+CREATE TABLE Employees OF Employee_t;
+
+INSERT INTO Employees VALUES(Employee_t(1,'Ali',50000));
+INSERT INTO Employees VALUES(Employee_t(2,'Sara',65000));
+INSERT INTO Employees VALUES(Employee_t(3,'Umar',72000));
+
+COMMIT;
+
+DECLARE
+  CURSOR c_emp IS SELECT VALUE(e) FROM Employees e;
+  obj Employee_t;
+BEGIN
+  OPEN c_emp;
+  LOOP
+    FETCH c_emp INTO obj;
+    EXIT WHEN c_emp%NOTFOUND;
+
+    DBMS_OUTPUT.PUT_LINE(obj.name || ' -> ' || obj.salary);
+  END LOOP;
+  CLOSE c_emp;
+END;
+/
